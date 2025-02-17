@@ -26,15 +26,15 @@ local AimlockBox = Tabs.Combat:AddLeftGroupbox('Aimlock')
 AimlockBox:AddToggle('AimlockEnabled', {
     Text = 'Enable Aimlock',
     Default = false,
-    Tooltip = 'Toggles the aimlock system',
+    Tooltip = 'Enable/Disable the aimlock system',
 })
 
 -- Add Aimlock key picker
 AimlockBox:AddLabel('Aimlock Key'):AddKeyPicker('AimlockKey', {
     Default = 'X',
-    SyncToggleState = true,
+    SyncToggleState = false,
     Mode = 'Hold',
-    Text = 'Aimlock',
+    Text = 'Hold to lock',
     NoUI = false,
 })
 
@@ -81,10 +81,18 @@ AimlockBox:AddSlider('AssistStrength', {
 -- Setup callbacks
 Toggles.AimlockEnabled:OnChanged(function(Value)
     Aimlock.Config.Enabled = Value
+    -- Notify the player
+    if LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui") then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Aimlock",
+            Text = Value and "Enabled" or "Disabled",
+            Duration = 2
+        })
+    end
 end)
 
 Options.AimlockKey:OnChanged(function()
-    if Options.AimlockKey.Value ~= nil then
+    if Options.AimlockKey.Value then
         Aimlock.Config.ToggleKey = Options.AimlockKey.Value
     end
 end)

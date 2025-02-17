@@ -1,6 +1,6 @@
 -- Aimlock System
 -- Author: Cascade
--- Version: 1.2
+-- Version: 1.3
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -85,6 +85,8 @@ end
 
 -- Aim Assistance Logic
 local function AimAt(targetPos)
+    if not AimlockConfig.Enabled then return end
+    
     local currentCam = Camera.CFrame
     local lookAt = CFrame.lookAt(currentCam.Position, targetPos)
     
@@ -105,18 +107,18 @@ end
 local function StartAimlock()
     -- Input handling for key press
     local inputConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not gameProcessed and AimlockConfig.Enabled then
-            if input.KeyCode == AimlockConfig.ToggleKey then
-                IsAiming = true
-                -- Get initial target
-                CurrentTarget = GetClosestPlayer()
-            end
+        if gameProcessed then return end
+        
+        if input.KeyCode == AimlockConfig.ToggleKey then
+            IsAiming = true
+            -- Get initial target
+            CurrentTarget = GetClosestPlayer()
         end
     end)
 
     -- Input handling for key release
     local inputEndConnection = UserInputService.InputEnded:Connect(function(input, gameProcessed)
-        if not gameProcessed and input.KeyCode == AimlockConfig.ToggleKey then
+        if input.KeyCode == AimlockConfig.ToggleKey then
             IsAiming = false
             CurrentTarget = nil
         end
@@ -124,7 +126,7 @@ local function StartAimlock()
 
     -- Aiming loop
     local renderConnection = RunService.RenderStepped:Connect(function()
-        if AimlockConfig.Enabled and IsAiming and LocalPlayer.Character then
+        if IsAiming and LocalPlayer.Character then
             local target = GetClosestPlayer()
             if target and target.Character then
                 local targetPos = target.Character[AimlockConfig.TargetPart].Position

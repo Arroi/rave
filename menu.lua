@@ -32,8 +32,8 @@ AimlockBox:AddToggle('AimlockEnabled', {
 -- Add Aimlock key picker
 AimlockBox:AddLabel('Aimlock Key'):AddKeyPicker('AimlockKey', {
     Default = 'X',
-    SyncToggleState = false,
-    Mode = 'Toggle',
+    SyncToggleState = true,
+    Mode = 'Hold',
     Text = 'Aimlock',
     NoUI = false,
 })
@@ -84,7 +84,9 @@ Toggles.AimlockEnabled:OnChanged(function(Value)
 end)
 
 Options.AimlockKey:OnChanged(function()
-    Aimlock.Config.ToggleKey = Options.AimlockKey.Value
+    if Options.AimlockKey.Value ~= nil then
+        Aimlock.Config.ToggleKey = Options.AimlockKey.Value
+    end
 end)
 
 Toggles.TeamCheck:OnChanged(function(Value)

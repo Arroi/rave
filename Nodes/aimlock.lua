@@ -20,7 +20,7 @@ local AimlockConfig = {
     TargetPart = "HumanoidRootPart",
     AssistStrength = 0.7,
     VisibilityCheck = true,
-    TeamCheck = true
+    TeamCheck = false
 }
 
 -- State
@@ -100,6 +100,7 @@ local function StartAimlock()
             if target and target.Character then
                 local targetPos = target.Character[AimlockConfig.TargetPart].Position
                 AimAt(targetPos)
+                print('started aimlock')
             end
         end
     end
@@ -107,22 +108,27 @@ local function StartAimlock()
     -- Input handling
     local function OnInput(input, gameProcessed)
         if gameProcessed then return end
+        
         if input.KeyCode == AimlockConfig.ToggleKey then
-            if input.UserInputState == Enum.UserInputState.Begin then
-                IsAiming = true
-            else
-                IsAiming = false
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                if input.UserInputState == Enum.UserInputState.Begin then
+                    IsAiming = true
+                elseif input.UserInputState == Enum.UserInputState.End then
+                    IsAiming = false
+                end
             end
         end
     end
 
     -- Connect events
-    local inputConnection = UserInputService.InputChanged:Connect(OnInput)
+    local inputConnection = UserInputService.InputBegan:Connect(OnInput)
+    local inputEndConnection = UserInputService.InputEnded:Connect(OnInput)
     local renderConnection = RunService.RenderStepped:Connect(UpdateAiming)
     
     -- Return cleanup function
     return function()
         inputConnection:Disconnect()
+        inputEndConnection:Disconnect()
         renderConnection:Disconnect()
         IsAiming = false
         CurrentTarget = nil

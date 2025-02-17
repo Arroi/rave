@@ -32,7 +32,7 @@ AimlockBox:AddToggle('AimlockEnabled', {
 -- Add Aimlock key picker
 AimlockBox:AddLabel('Aimlock Key'):AddKeyPicker('AimlockKey', {
     Default = 'X',
-    SyncToggleState = false,
+    SyncToggleState = true,
     Mode = 'Hold',
     Text = 'Hold to lock',
     NoUI = false,
@@ -95,7 +95,10 @@ Toggles.AimlockEnabled:OnChanged(setEnabled)
 
 Options.AimlockKey:OnChanged(function()
     if Options.AimlockKey.Value then
-        Aimlock.Config.ToggleKey = Options.AimlockKey.Value
+        local keyEnum = Enum.KeyCode[Options.AimlockKey.Value]
+        if keyEnum then
+            Aimlock.Config.ToggleKey = keyEnum
+        end
     end
 end)
 

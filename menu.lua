@@ -79,7 +79,7 @@ AimlockBox:AddSlider('AssistStrength', {
 })
 
 -- Setup callbacks
-Toggles.AimlockEnabled:OnChanged(function(Value)
+local function setEnabled(Value)
     Aimlock.Config.Enabled = Value
     -- Notify the player
     if LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui") then
@@ -89,7 +89,9 @@ Toggles.AimlockEnabled:OnChanged(function(Value)
             Duration = 2
         })
     end
-end)
+end
+
+Toggles.AimlockEnabled:OnChanged(setEnabled)
 
 Options.AimlockKey:OnChanged(function()
     if Options.AimlockKey.Value then

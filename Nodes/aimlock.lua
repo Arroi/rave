@@ -1,6 +1,6 @@
 -- Aimlock System
 -- Author: Cascade
--- Version: 1.3
+-- Version: 1.4
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -34,15 +34,6 @@ local function IsTeamMate(player)
 end
 
 local function GetClosestPlayer()
-    -- If we already have a target and they're still valid, keep targeting them
-    if CurrentTarget and 
-       CurrentTarget.Character and 
-       CurrentTarget.Character:FindFirstChild("Humanoid") and 
-       CurrentTarget.Character.Humanoid.Health > 0 and
-       not IsTeamMate(CurrentTarget) then
-        return CurrentTarget
-    end
-
     local closestPlayer = nil
     local shortestDistance = AimlockConfig.MaxDistance
     local position = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(AimlockConfig.TargetPart)
@@ -78,8 +69,6 @@ local function GetClosestPlayer()
         end
     end
     
-    -- Update our current target
-    CurrentTarget = closestPlayer
     return closestPlayer
 end
 
@@ -105,40 +94,35 @@ end
 
 -- Main Loop
 local function StartAimlock()
-    -- Input handling for key press
-    local inputConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then return end
-        
-        if input.KeyCode == AimlockConfig.ToggleKey then
-            IsAiming = true
-            -- Get initial target
-            CurrentTarget = GetClosestPlayer()
-        end
-    end)
-
-    -- Input handling for key release
-    local inputEndConnection = UserInputService.InputEnded:Connect(function(input, gameProcessed)
-        if input.KeyCode == AimlockConfig.ToggleKey then
-            IsAiming = false
-            CurrentTarget = nil
-        end
-    end)
-
-    -- Aiming loop
-    local renderConnection = RunService.RenderStepped:Connect(function()
-        if IsAiming and LocalPlayer.Character then
+    local function UpdateAiming()
+        if AimlockConfig.Enabled and IsAiming and LocalPlayer.Character then
             local target = GetClosestPlayer()
             if target and target.Character then
                 local targetPos = target.Character[AimlockConfig.TargetPart].Position
                 AimAt(targetPos)
             end
         end
-    end)
+    end
+
+    -- Input handling
+    local function OnInput(input, gameProcessed)
+        if gameProcessed then return end
+        if input.KeyCode == AimlockConfig.ToggleKey then
+            if input.UserInputState == Enum.UserInputState.Begin then
+                IsAiming = true
+            else
+                IsAiming = false
+            end
+        end
+    end
+
+    -- Connect events
+    local inputConnection = UserInputService.InputChanged:Connect(OnInput)
+    local renderConnection = RunService.RenderStepped:Connect(UpdateAiming)
     
-    -- Cleanup function
+    -- Return cleanup function
     return function()
         inputConnection:Disconnect()
-        inputEndConnection:Disconnect()
         renderConnection:Disconnect()
         IsAiming = false
         CurrentTarget = nil

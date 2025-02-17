@@ -86,24 +86,9 @@ local function AimAt(targetPos)
     end
 end
 
--- Input Handling
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == AimlockConfig.ToggleKey then
-        AimlockConfig.Enabled = not AimlockConfig.Enabled
-        -- Notify the player
-        if LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui") then
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Aim Assistance",
-                Text = AimlockConfig.Enabled and "Enabled" or "Disabled",
-                Duration = 2
-            })
-        end
-    end
-end)
-
 -- Main Loop
 local function StartAimlock()
-    RunService.RenderStepped:Connect(function()
+    local connection = RunService.RenderStepped:Connect(function()
         if AimlockConfig.Enabled and LocalPlayer.Character then
             local target = GetClosestPlayer()
             if target and target.Character then
@@ -112,9 +97,16 @@ local function StartAimlock()
             end
         end
     end)
+    
+    return function()
+        connection:Disconnect()
+    end
 end
 
-return {
+-- Initialize
+local AimlockModule = {
     Config = AimlockConfig,
     Start = StartAimlock
 }
+
+return AimlockModule

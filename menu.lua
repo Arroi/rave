@@ -32,9 +32,9 @@ AimlockBox:AddToggle('AimlockEnabled', {
 -- Add Aimlock key picker
 AimlockBox:AddLabel('Aimlock Key'):AddKeyPicker('AimlockKey', {
     Default = 'X',
-    SyncToggleState = true,
-    Mode = 'Hold',
-    Text = 'Hold to lock',
+    SyncToggleState = false,
+    Mode = 'Toggle',
+    Text = 'Toggle Aimlock',
     NoUI = false,
 })
 

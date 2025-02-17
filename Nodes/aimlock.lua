@@ -1,250 +1,120 @@
+-- Aimlock System
+-- Author: Cascade
+-- Version: 1.1
+
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Get MainCamera module
-local MainCamera = nil
-for _, module in pairs(getgc(true)) do
-    if type(module) == "table" and rawget(module, "SetMenuEnabled") and rawget(module, "GetUpVector") then
-        MainCamera = module
-        break
+-- Configuration
+local AimlockConfig = {
+    Enabled = false,
+    ToggleKey = Enum.KeyCode.X,
+    MaxDistance = 1000,
+    Smoothness = 0.5,
+    FieldOfView = 90,
+    TargetPart = "HumanoidRootPart",
+    AssistStrength = 0.7,
+    VisibilityCheck = true,
+    TeamCheck = true
+}
+
+-- Utility Functions
+local function IsTeamMate(player)
+    if not AimlockConfig.TeamCheck then return false end
+    return player.Team and player.Team == LocalPlayer.Team
+end
+
+local function GetClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = AimlockConfig.MaxDistance
+    local position = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(AimlockConfig.TargetPart)
+    
+    if not position then return nil end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and 
+           player.Character and 
+           player.Character:FindFirstChild(AimlockConfig.TargetPart) and
+           player.Character:FindFirstChild("Humanoid") and
+           player.Character.Humanoid.Health > 0 and
+           not IsTeamMate(player) then
+            
+            local targetPos = player.Character[AimlockConfig.TargetPart].Position
+            local distance = (targetPos - position.Position).Magnitude
+            
+            -- Check if player is within our field of view
+            local _, onScreen = Camera:WorldToScreenPoint(targetPos)
+            if not onScreen then continue end
+            
+            -- Visibility check
+            if AimlockConfig.VisibilityCheck then
+                local ray = Ray.new(Camera.CFrame.Position, (targetPos - Camera.CFrame.Position).Unit * distance)
+                local hit = workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character, player.Character})
+                if hit then continue end
+            end
+            
+            if distance < shortestDistance then
+                closestPlayer = player
+                shortestDistance = distance
+            end
+        end
+    end
+    
+    return closestPlayer
+end
+
+-- Aim Assistance Logic
+local function AimAt(targetPos)
+    local currentCam = Camera.CFrame
+    local lookAt = CFrame.lookAt(currentCam.Position, targetPos)
+    
+    -- Calculate the difference in angles
+    local angle = math.acos(currentCam.LookVector:Dot(lookAt.LookVector))
+    
+    -- Only assist if the target is within our FOV
+    if math.deg(angle) <= AimlockConfig.FieldOfView then
+        -- Apply the aim assistance based on AssistStrength and Smoothness
+        local targetCFrame = currentCam:Lerp(lookAt, AimlockConfig.AssistStrength * (1 - AimlockConfig.Smoothness))
+        
+        -- Update camera CFrame
+        Camera.CFrame = targetCFrame
     end
 end
 
--- Notification System
-local Notifications = {
-    Active = {},
-    MaxNotifications = 5,
-    Duration = 3
-}
+-- Input Handling
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == AimlockConfig.ToggleKey then
+        AimlockConfig.Enabled = not AimlockConfig.Enabled
+        -- Notify the player
+        if LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui") then
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Aim Assistance",
+                Text = AimlockConfig.Enabled and "Enabled" or "Disabled",
+                Duration = 2
+            })
+        end
+    end
+end)
 
-function Notifications:Create(text, duration)
-    duration = duration or self.Duration
-    
-    local notification = Drawing.new("Text")
-    notification.Text = text
-    notification.Size = 18
-    notification.Center = false
-    notification.Outline = true
-    notification.Color = Color3.new(1, 1, 1)
-    notification.Font = 2
-    notification.Visible = true
-    
-    -- Position notification
-    local yOffset = 30
-    for _, active in pairs(self.Active) do
-        yOffset = yOffset + 25
-    end
-    notification.Position = Vector2.new(10, yOffset)
-    
-    -- Add to active notifications
-    table.insert(self.Active, {
-        Drawing = notification,
-        EndTime = tick() + duration
-    })
-    
-    -- Remove old notifications if exceeding max
-    while #self.Active > self.MaxNotifications do
-        local oldest = table.remove(self.Active, 1)
-        oldest.Drawing:Remove()
-    end
-    
-    -- Schedule removal
-    task.delay(duration, function()
-        for i, active in pairs(self.Active) do
-            if active.Drawing == notification then
-                table.remove(self.Active, i)
-                notification:Remove()
-                break
+-- Main Loop
+local function StartAimlock()
+    RunService.RenderStepped:Connect(function()
+        if AimlockConfig.Enabled and LocalPlayer.Character then
+            local target = GetClosestPlayer()
+            if target and target.Character then
+                local targetPos = target.Character[AimlockConfig.TargetPart].Position
+                AimAt(targetPos)
             end
         end
     end)
 end
 
--- Update notification positions
-RunService.RenderStepped:Connect(function()
-    local yOffset = 30
-    for _, notification in pairs(Notifications.Active) do
-        notification.Drawing.Position = Vector2.new(10, yOffset)
-        yOffset = yOffset + 25
-    end
-end)
-
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-
--- Aimlock Configuration
-local Settings = {
-    Enabled = false,
-    Key = Enum.KeyCode.Q,
-    Prediction = 0.135,
-    AimPart = "Head",
-    Smoothness = 0.5,
-    TeamCheck = true,
-    Sensitivity = 0.5
-}
-
-local FOVSettings = {
-    Visible = true,
-    Radius = 120
-}
-
--- Variables
-local Target = nil
-
--- FOV Circle Drawing
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Visible = FOVSettings.Visible
-FOVCircle.Radius = FOVSettings.Radius
-FOVCircle.Color = Color3.fromRGB(255, 255, 255)
-FOVCircle.Thickness = 1
-FOVCircle.Filled = false
-FOVCircle.Transparency = 1
-
--- Function to check if player is on different team
-local function IsEnemy(player)
-    if not Settings.TeamCheck then return true end
-    
-    local playerTeam = player.Team
-    local localTeam = LocalPlayer.Team
-    
-    if not playerTeam or not localTeam then return true end
-    return playerTeam ~= localTeam
-end
-
--- Function to get character from player in PF
-local function GetCharacter(player)
-    -- First try normal character
-    local character = player.Character
-    if not character then
-        -- Try finding in workspace
-        for _, model in pairs(workspace:GetChildren()) do
-            if model:IsA("Model") and model:FindFirstChild("Head") and model:FindFirstChild("Torso") then
-                local humanoid = model:FindFirstChild("Humanoid")
-                if humanoid and humanoid:FindFirstChild("Player") and humanoid.Player.Value == player then
-                    return model
-                end
-            end
-        end
-        return nil
-    end
-    return character
-end
-
--- Function to get nearest player
-local function GetNearestPlayer()
-    local MaxDistance = FOVSettings.Radius
-    local Target = nil
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and IsEnemy(player) then
-            local char = GetCharacter(player)
-            if char then
-                local head = char:FindFirstChild(Settings.AimPart)
-                local humanoid = char:FindFirstChild("Humanoid")
-                
-                if head and humanoid and humanoid.Health > 0 then
-                    local screenPoint, onScreen = Camera:WorldToScreenPoint(head.Position)
-                    
-                    if onScreen then
-                        local vectorDistance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(screenPoint.X, screenPoint.Y)).Magnitude
-                        
-                        if vectorDistance < MaxDistance then
-                            MaxDistance = vectorDistance
-                            Target = player
-                        end
-                    end
-                end
-            end
-        end
-    end
-    
-    return Target
-end
-
--- Update FOV Circle
-RunService.RenderStepped:Connect(function()
-    if Settings.Enabled then
-        FOVCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
-    end
-end)
-
--- Camera angle manipulation using MainCamera
-local function AdjustCameraAngles(targetPos)
-    if not MainCamera then 
-        Notifications:Create("MainCamera module not found!", 3)
-        return 
-    end
-    
-    local currentAngle = MainCamera.angles
-    local cameraPos = Camera.CFrame.Position
-    
-    -- Calculate target angles
-    local targetCFrame = CFrame.new(cameraPos, targetPos)
-    local targetX, targetY = targetCFrame:ToOrientation()
-    
-    -- Smooth interpolation
-    local newX = currentAngle.x + (targetX - currentAngle.x) * Settings.Smoothness
-    local newY = currentAngle.y + (targetY - currentAngle.y) * Settings.Smoothness
-    
-    -- Update camera angles
-    MainCamera.angles = Vector3.new(newX, newY, 0)
-end
-
--- Aimlock Logic
-UserInputService.InputBegan:Connect(function(Input)
-    if Input.KeyCode == Settings.Key then
-        Settings.Enabled = not Settings.Enabled
-        FOVCircle.Visible = Settings.Enabled
-        
-        if Settings.Enabled then
-            Notifications:Create("Aimlock Enabled", 2)
-            Target = GetNearestPlayer()
-            if Target then
-                Notifications:Create("Target Acquired: " .. Target.Name, 2)
-            else
-                Notifications:Create("No target found", 2)
-            end
-        else
-            Notifications:Create("Aimlock Disabled", 2)
-            Target = nil
-        end
-    end
-end)
-
--- Aimbot Loop
-RunService.RenderStepped:Connect(function()
-    if Settings.Enabled and Target then
-        local char = GetCharacter(Target)
-        if char and char:FindFirstChild(Settings.AimPart) then
-            local targetPart = char[Settings.AimPart]
-            local targetPos = targetPart.Position
-            local targetVel = targetPart.Velocity
-            
-            -- Prediction
-            local predictionOffset = targetVel * Settings.Prediction
-            local finalPos = targetPos + predictionOffset
-            
-            -- Adjust camera angles
-            AdjustCameraAngles(finalPos)
-        else
-            Target = GetNearestPlayer()
-        end
-    end
-end)
-
 return {
-    ToggleAimlock = function()
-        Settings.Enabled = not Settings.Enabled
-        FOVCircle.Visible = Settings.Enabled
-    end,
-    UpdateSettings = function(newSettings)
-        for key, value in pairs(newSettings) do
-            Settings[key] = value
-            Notifications:Create("Updated " .. key .. " to " .. tostring(value), 2)
-        end
-    end,
-    Settings = Settings,
-    FOVSettings = FOVSettings
+    Config = AimlockConfig,
+    Start = StartAimlock
 }

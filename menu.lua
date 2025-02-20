@@ -1,16 +1,16 @@
     local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Arroi/rave/refs/heads/main/Library.lua"))()
 
     -- Create main window
-    local window = Library:CreateWindow("Dashboard")
-    
+    local Window = Library:CreateWindow("Example")
+
     -- Create tabs
-    local mainTab = window:AddTab("Main", "rbxassetid://ICON_ID")
-    local settingsTab = window:AddTab("Settings", "rbxassetid://ICON_ID")
+    local MainTab = Window:Tab("Main")
+    local SettingsTab = Window:Tab("Settings")
     
-    -- Add panels to main tab
-    local statsPanel = mainTab:AddPanel("Statistics")
-    local configPanel = mainTab:AddPanel("Configuration")
+    -- Create sections
+    local MainSection = MainTab:Section("Example Section")
     
-    -- Add panels to settings tab
-    local userPanel = settingsTab:AddPanel("User Settings")
-    local themePanel = settingsTab:AddPanel("Theme")
+    -- Create toggles
+    MainSection:Toggle("Example Toggle", false, "ExampleFlag", function(value)
+        print("Toggle value:", value)
+    end)

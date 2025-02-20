@@ -191,7 +191,6 @@ sendNotification("Script Loaded", "Key System Activated", 3)
 --------------------------------------------------
 local function loadUILibrary()
 
-    loadstring(game:"")
 
     sendNotification("UI Loaded", "The UI library has been activated!", 3)
 end

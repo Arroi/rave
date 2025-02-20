@@ -86,6 +86,7 @@ function Library:CreateWindow(title)
         Size = UDim2.new(0, 150, 1, -30),
         Position = UDim2.new(0, 0, 0, 30),
         BackgroundColor3 = Library.Theme.LightContrast,
+        ClipsDescendants = true,
         Parent = MainFrame
     })
 
@@ -99,7 +100,7 @@ function Library:CreateWindow(title)
 
     local TabList = createObject("UIListLayout", {
         Padding = UDim.new(0, 5),
-        SortOrder = Enum.SortOrder.LayoutOrder,
+        SortOrder = Enum.SortOrder.Name,
         Parent = TabContainer
     })
 
@@ -109,18 +110,13 @@ function Library:CreateWindow(title)
         Size = UDim2.new(1, -150, 1, -30),
         Position = UDim2.new(0, 150, 0, 30),
         BackgroundColor3 = Library.Theme.Background,
+        ClipsDescendants = true,
         Parent = MainFrame
     })
 
-    -- Add separator line
-    local Separator = createObject("Frame", {
-        Name = "Separator",
-        Size = UDim2.new(0, 1, 1, 0),
-        Position = UDim2.new(0, 149, 0, 0),
-        BackgroundColor3 = Library.Theme.DarkContrast,
-        BorderSizePixel = 0,
-        Parent = TabContent
-    })
+    -- Track tabs
+    local Tabs = {}
+    local SelectedTab = nil
 
     -- Window Dragging Logic
     local dragging, dragInput, dragStart, startPos
@@ -158,7 +154,8 @@ function Library:CreateWindow(title)
             BackgroundColor3 = Library.Theme.DarkContrast,
             Text = "",
             AutoButtonColor = false,
-            Parent = TabContainer
+            Parent = TabContainer,
+            LayoutOrder = #Tabs
         })
 
         -- Add corner to Tab Button
@@ -221,39 +218,47 @@ function Library:CreateWindow(title)
 
         -- Improved Tab Selection Logic
         TabButton.MouseButton1Click:Connect(function()
-            for _, instance in pairs(TabContent:GetChildren()) do
-                if instance:IsA("ScrollingFrame") then
-                    instance.Visible = false
-                end
+            if SelectedTab == TabPage then return end
+            
+            -- Hide all tabs
+            for _, tab in pairs(Tabs) do
+                tab.Page.Visible = false
+                createTween(tab.Button, {
+                    BackgroundColor3 = Library.Theme.DarkContrast
+                })
+                createTween(tab.Button.Title, {
+                    TextColor3 = Library.Theme.TextColor
+                })
             end
             
-            for _, instance in pairs(TabContainer:GetChildren()) do
-                if instance:IsA("TextButton") then
-                    createTween(instance, {
-                        BackgroundColor3 = Library.Theme.DarkContrast,
-                        TextColor3 = Library.Theme.TextColor
-                    })
-                end
-            end
-            
+            -- Show selected tab
             TabPage.Visible = true
             createTween(TabButton, {
                 BackgroundColor3 = Library.Theme.Accent
             })
-            createTween(TabText, {
+            createTween(TabButton.Title, {
                 TextColor3 = Color3.fromRGB(255, 255, 255)
             })
+            
+            SelectedTab = TabPage
         end)
 
+        -- Store tab information
+        table.insert(Tabs, {
+            Button = TabButton,
+            Page = TabPage
+        })
+
         -- Show first tab by default
-        if #TabContainer:GetChildren() <= 2 then  -- Account for UIListLayout
+        if #Tabs == 1 then
             TabPage.Visible = true
             createTween(TabButton, {
                 BackgroundColor3 = Library.Theme.Accent
             })
-            createTween(TabText, {
+            createTween(TabButton.Title, {
                 TextColor3 = Color3.fromRGB(255, 255, 255)
             })
+            SelectedTab = TabPage
         end
 
         -- Tab Methods

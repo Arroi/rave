@@ -1,12 +1,16 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Arroi/rave/refs/heads/main/Library.lua"))()
 
--- Create main window
-local Window = Library:CreateWindow("Rave Hub")
+-- Verify Library loaded correctly
+assert(Library, "Failed to load Library")
+assert(Library.NavigationType, "Failed to load NavigationType")
 
--- Create tabs
-local MainTab = Window:CreateTab("Main")
-local VisualsTab = Window:CreateTab("Visuals")
-local SettingsTab = Window:CreateTab("Settings")
+-- Create main window with sidebar navigation (you can change to other styles)
+local Window = Library:CreateWindow("Rave Hub", Library.NavigationType.Sidebar)
+
+-- Create tabs with icons (you can replace icon IDs with your own)
+local MainTab = Window:CreateTab("Main", "rbxassetid://8875632589") -- Home icon
+local VisualsTab = Window:CreateTab("Visuals", "rbxassetid://8875650667") -- Eye icon
+local SettingsTab = Window:CreateTab("Settings", "rbxassetid://8875633547") -- Gear icon
 
 -- Main Tab Elements
 MainTab:AddButton("Kill All", function()
@@ -46,3 +50,17 @@ end)
 SettingsTab:AddToggle("Auto Save", true, function(enabled)
     print("Auto Save:", enabled)
 end)
+
+-- Example of using different navigation styles:
+
+--[[ Bottom Navigation
+local Window = Library:CreateWindow("Rave Hub", Library.NavigationType.Bottom)
+]]
+
+--[[ Top Navigation
+local Window = Library:CreateWindow("Rave Hub", Library.NavigationType.Top)
+]]
+
+--[[ Bento Menu
+local Window = Library:CreateWindow("Rave Hub", Library.NavigationType.Bento)
+]]

@@ -9,6 +9,12 @@ local TWEEN_INFO = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirectio
 -- Library table
 local Library = {
     Windows = {},
+    NavigationType = {
+        Sidebar = "sidebar",
+        Bottom = "bottom",
+        Top = "top",
+        Bento = "bento"
+    },
     Theme = {
         Background = Color3.fromRGB(255, 255, 255),  -- White background
         Accent = Color3.fromRGB(89, 91, 255),       -- Modern purple/blue
@@ -18,12 +24,6 @@ local Library = {
         SubTextColor = Color3.fromRGB(99, 100, 102), -- Secondary text
         BorderColor = Color3.fromRGB(233, 234, 236), -- Border color
         PlaceholderColor = Color3.fromRGB(140, 140, 140)
-    },
-    NavigationType = {
-        Sidebar = "sidebar",
-        Bottom = "bottom",
-        Top = "top",
-        Bento = "bento"
     }
 }
 

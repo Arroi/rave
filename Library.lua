@@ -80,7 +80,7 @@ function Library:CreateWindow(title)
         Parent = TitleBar
     })
 
-    -- Create Tab Container
+    -- Create Tab Container with better styling
     local TabContainer = createObject("Frame", {
         Name = "TabContainer",
         Size = UDim2.new(0, 150, 1, -30),
@@ -89,13 +89,37 @@ function Library:CreateWindow(title)
         Parent = MainFrame
     })
 
-    -- Create Tab Content Area
+    -- Add padding and layout for tabs
+    local TabPadding = createObject("UIPadding", {
+        PaddingTop = UDim.new(0, 5),
+        PaddingLeft = UDim.new(0, 5),
+        PaddingRight = UDim.new(0, 5),
+        Parent = TabContainer
+    })
+
+    local TabList = createObject("UIListLayout", {
+        Padding = UDim.new(0, 5),
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = TabContainer
+    })
+
+    -- Create Tab Content Area with better styling
     local TabContent = createObject("Frame", {
         Name = "TabContent",
         Size = UDim2.new(1, -150, 1, -30),
         Position = UDim2.new(0, 150, 0, 30),
         BackgroundColor3 = Library.Theme.Background,
         Parent = MainFrame
+    })
+
+    -- Add separator line
+    local Separator = createObject("Frame", {
+        Name = "Separator",
+        Size = UDim2.new(0, 1, 1, 0),
+        Position = UDim2.new(0, 149, 0, 0),
+        BackgroundColor3 = Library.Theme.DarkContrast,
+        BorderSizePixel = 0,
+        Parent = TabContent
     })
 
     -- Window Dragging Logic
@@ -127,68 +151,109 @@ function Library:CreateWindow(title)
     function Window:CreateTab(name)
         local Tab = {}
         
-        -- Create Tab Button
+        -- Create Tab Button with better styling
         local TabButton = createObject("TextButton", {
             Name = name .. "Tab",
-            Size = UDim2.new(1, 0, 0, 30),
-            BackgroundColor3 = Library.Theme.LightContrast,
-            Text = name,
-            TextColor3 = Library.Theme.TextColor,
-            TextSize = 14,
-            Font = Enum.Font.Gotham,
+            Size = UDim2.new(1, 0, 0, 32),
+            BackgroundColor3 = Library.Theme.DarkContrast,
+            Text = "",
+            AutoButtonColor = false,
             Parent = TabContainer
         })
 
-        -- Add Corner to Tab Button
+        -- Add corner to Tab Button
         createObject("UICorner", {
-            CornerRadius = UDim.new(0, 4),
+            CornerRadius = UDim.new(0, 6),
             Parent = TabButton
         })
 
-        -- Create Tab Page
+        -- Add tab icon (placeholder)
+        local TabIcon = createObject("Frame", {
+            Name = "Icon",
+            Size = UDim2.new(0, 20, 0, 20),
+            Position = UDim2.new(0, 8, 0.5, -10),
+            BackgroundTransparency = 1,
+            Parent = TabButton
+        })
+
+        -- Add tab text
+        local TabText = createObject("TextLabel", {
+            Name = "Title",
+            Size = UDim2.new(1, -40, 1, 0),
+            Position = UDim2.new(0, 35, 0, 0),
+            BackgroundTransparency = 1,
+            Text = name,
+            TextColor3 = Library.Theme.TextColor,
+            TextSize = 14,
+            Font = Enum.Font.GothamMedium,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = TabButton
+        })
+
+        -- Create Tab Page with better styling
         local TabPage = createObject("ScrollingFrame", {
             Name = name .. "Page",
             Size = UDim2.new(1, -20, 1, -20),
             Position = UDim2.new(0, 10, 0, 10),
             BackgroundTransparency = 1,
             ScrollBarThickness = 2,
+            ScrollBarImageColor3 = Library.Theme.Accent,
             Visible = false,
             AutomaticCanvasSize = Enum.AutomaticSize.Y,
             CanvasSize = UDim2.new(0, 0, 0, 0),
             Parent = TabContent
         })
 
-        -- Add UIListLayout to TabPage
-        local UIListLayout = createObject("UIListLayout", {
-            Padding = UDim.new(0, 5),
+        -- Add padding to tab page
+        local ContentPadding = createObject("UIPadding", {
+            PaddingTop = UDim.new(0, 5),
+            PaddingLeft = UDim.new(0, 5),
+            PaddingRight = UDim.new(0, 5),
             Parent = TabPage
         })
 
-        -- Tab Selection Logic
+        -- Add UIListLayout to TabPage with better spacing
+        local UIListLayout = createObject("UIListLayout", {
+            Padding = UDim.new(0, 8),
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Parent = TabPage
+        })
+
+        -- Improved Tab Selection Logic
         TabButton.MouseButton1Click:Connect(function()
-            -- Hide all other tab pages
             for _, instance in pairs(TabContent:GetChildren()) do
                 if instance:IsA("ScrollingFrame") then
                     instance.Visible = false
                 end
             end
             
-            -- Reset all tab button colors
             for _, instance in pairs(TabContainer:GetChildren()) do
                 if instance:IsA("TextButton") then
-                    createTween(instance, {BackgroundColor3 = Library.Theme.LightContrast})
+                    createTween(instance, {
+                        BackgroundColor3 = Library.Theme.DarkContrast,
+                        TextColor3 = Library.Theme.TextColor
+                    })
                 end
             end
             
-            -- Show selected tab and highlight button
             TabPage.Visible = true
-            createTween(TabButton, {BackgroundColor3 = Library.Theme.Accent})
+            createTween(TabButton, {
+                BackgroundColor3 = Library.Theme.Accent
+            })
+            createTween(TabText, {
+                TextColor3 = Color3.fromRGB(255, 255, 255)
+            })
         end)
 
         -- Show first tab by default
-        if #TabContainer:GetChildren() == 1 then
+        if #TabContainer:GetChildren() <= 2 then  -- Account for UIListLayout
             TabPage.Visible = true
-            createTween(TabButton, {BackgroundColor3 = Library.Theme.Accent})
+            createTween(TabButton, {
+                BackgroundColor3 = Library.Theme.Accent
+            })
+            createTween(TabText, {
+                TextColor3 = Color3.fromRGB(255, 255, 255)
+            })
         end
 
         -- Tab Methods

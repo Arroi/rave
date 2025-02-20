@@ -1,25 +1,16 @@
     local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Arroi/rave/refs/heads/main/Library.lua"))()
 
-    local window = Library:CreateWindow("My UI")
-
+    -- Create main window
+    local window = Library:CreateWindow("Dashboard")
+    
     -- Create tabs
-    local mainTab = window:AddTab("Main")
-    local settingsTab = window:AddTab("Settings")
+    local mainTab = window:AddTab("Main", "rbxassetid://ICON_ID")
+    local settingsTab = window:AddTab("Settings", "rbxassetid://ICON_ID")
     
-    -- Add elements
-    mainTab:AddButton("Click Me", function()
-        print("Button clicked!")
-    end)
+    -- Add panels to main tab
+    local statsPanel = mainTab:AddPanel("Statistics")
+    local configPanel = mainTab:AddPanel("Configuration")
     
-    mainTab:AddSlider("Volume", 0, 100, 50, function(value)
-        print("Volume:", value)
-    end)
-    
-    mainTab:AddDropdown("Select Option", {"Option 1", "Option 2", "Option 3"}, function(selected)
-        print("Selected:", selected)
-    end)
-    
-    -- Create a loader
-    local loader = Library:CreateLoader()
-    task.wait(2)
-    loader:Destroy()
+    -- Add panels to settings tab
+    local userPanel = settingsTab:AddPanel("User Settings")
+    local themePanel = settingsTab:AddPanel("Theme")

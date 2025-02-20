@@ -10,12 +10,14 @@ local TWEEN_INFO = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirectio
 local Library = {
     Windows = {},
     Theme = {
-        Background = Color3.fromRGB(25, 25, 25),
-        Accent = Color3.fromRGB(0, 90, 156),
-        LightContrast = Color3.fromRGB(35, 35, 35),
-        DarkContrast = Color3.fromRGB(20, 20, 20),
-        TextColor = Color3.fromRGB(255, 255, 255),
-        Disabled = Color3.fromRGB(60, 60, 60)
+        Background = Color3.fromRGB(255, 255, 255),  -- White background
+        Accent = Color3.fromRGB(89, 91, 255),       -- Modern purple/blue
+        LightContrast = Color3.fromRGB(247, 248, 250), -- Light gray for contrast
+        DarkContrast = Color3.fromRGB(233, 234, 236),  -- Slightly darker gray
+        TextColor = Color3.fromRGB(49, 51, 56),      -- Dark text
+        SubTextColor = Color3.fromRGB(99, 100, 102), -- Secondary text
+        BorderColor = Color3.fromRGB(233, 234, 236), -- Border color
+        PlaceholderColor = Color3.fromRGB(140, 140, 140)
     }
 }
 
@@ -36,82 +38,84 @@ end
 
 -- Main Window Creator
 function Library:CreateWindow(title)
-    -- Create ScreenGui
+    -- Create ScreenGui with modern styling
     local ScreenGui = createObject("ScreenGui", {
         Name = "UILibrary",
         Parent = CoreGui,
         ResetOnSpawn = false
     })
 
-    -- Create Main Frame
+    -- Create Main Frame with rounded corners and shadow
     local MainFrame = createObject("Frame", {
         Name = "MainFrame",
-        Size = UDim2.new(0, 600, 0, 400),
-        Position = UDim2.new(0.5, -300, 0.5, -200),
+        Size = UDim2.new(0, 900, 0, 600),  -- Larger size for modern look
+        Position = UDim2.new(0.5, -450, 0.5, -300),
         BackgroundColor3 = Library.Theme.Background,
         Parent = ScreenGui
     })
 
-    -- Add Corner Radius
-    local Corner = createObject("UICorner", {
-        CornerRadius = UDim.new(0, 6),
-        Parent = MainFrame
-    })
-
-    -- Create Title Bar
-    local TitleBar = createObject("Frame", {
-        Name = "TitleBar",
-        Size = UDim2.new(1, 0, 0, 30),
-        BackgroundColor3 = Library.Theme.DarkContrast,
-        Parent = MainFrame
-    })
-
-    -- Add Title Text
-    local TitleText = createObject("TextLabel", {
-        Name = "Title",
-        Size = UDim2.new(1, -10, 1, 0),
-        Position = UDim2.new(0, 10, 0, 0),
+    -- Add shadow
+    local Shadow = createObject("ImageLabel", {
+        Name = "Shadow",
+        AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundTransparency = 1,
-        Text = title,
-        TextColor3 = Library.Theme.TextColor,
-        TextSize = 14,
-        Font = Enum.Font.Gotham,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = TitleBar
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(1, 47, 1, 47),
+        ZIndex = 0,
+        Image = "rbxassetid://6015897843",
+        ImageColor3 = Color3.new(0, 0, 0),
+        ImageTransparency = 0.5,
+        Parent = MainFrame
     })
 
-    -- Create Tab Container with better styling
+    -- Create modern sidebar
+    local Sidebar = createObject("Frame", {
+        Name = "Sidebar",
+        Size = UDim2.new(0, 240, 1, 0),
+        BackgroundColor3 = Library.Theme.LightContrast,
+        Parent = MainFrame
+    })
+
+    -- Add search bar to sidebar
+    local SearchFrame = createObject("Frame", {
+        Name = "SearchFrame",
+        Size = UDim2.new(1, -20, 0, 36),
+        Position = UDim2.new(0, 10, 0, 10),
+        BackgroundColor3 = Library.Theme.Background,
+        Parent = Sidebar
+    })
+
+    local SearchBox = createObject("TextBox", {
+        Name = "SearchBox",
+        Size = UDim2.new(1, -16, 1, 0),
+        Position = UDim2.new(0, 36, 0, 0),
+        BackgroundTransparency = 1,
+        Text = "",
+        PlaceholderText = "Search...",
+        TextColor3 = Library.Theme.TextColor,
+        PlaceholderColor3 = Library.Theme.PlaceholderColor,
+        TextSize = 14,
+        Font = Enum.Font.GothamMedium,
+        Parent = SearchFrame
+    })
+
+    -- Add search icon
+    local SearchIcon = createObject("ImageLabel", {
+        Size = UDim2.new(0, 16, 0, 16),
+        Position = UDim2.new(0, 10, 0.5, -8),
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://8875486305", -- Replace with appropriate search icon ID
+        ImageColor3 = Library.Theme.SubTextColor,
+        Parent = SearchFrame
+    })
+
+    -- Create tab container with new styling
     local TabContainer = createObject("Frame", {
         Name = "TabContainer",
-        Size = UDim2.new(0, 150, 1, -30),
-        Position = UDim2.new(0, 0, 0, 30),
-        BackgroundColor3 = Library.Theme.LightContrast,
-        ClipsDescendants = true,
-        Parent = MainFrame
-    })
-
-    -- Add padding and layout for tabs
-    local TabPadding = createObject("UIPadding", {
-        PaddingTop = UDim.new(0, 5),
-        PaddingLeft = UDim.new(0, 5),
-        PaddingRight = UDim.new(0, 5),
-        Parent = TabContainer
-    })
-
-    local TabList = createObject("UIListLayout", {
-        Padding = UDim.new(0, 5),
-        SortOrder = Enum.SortOrder.Name,
-        Parent = TabContainer
-    })
-
-    -- Create Tab Content Area with better styling
-    local TabContent = createObject("Frame", {
-        Name = "TabContent",
-        Size = UDim2.new(1, -150, 1, -30),
-        Position = UDim2.new(0, 150, 0, 30),
-        BackgroundColor3 = Library.Theme.Background,
-        ClipsDescendants = true,
-        Parent = MainFrame
+        Size = UDim2.new(1, 0, 1, -60),
+        Position = UDim2.new(0, 0, 0, 56),
+        BackgroundTransparency = 1,
+        Parent = Sidebar
     })
 
     -- Track tabs
@@ -121,7 +125,7 @@ function Library:CreateWindow(title)
     -- Window Dragging Logic
     local dragging, dragInput, dragStart, startPos
     
-    TitleBar.InputBegan:Connect(function(input)
+    MainFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
@@ -144,40 +148,33 @@ function Library:CreateWindow(title)
     -- Window Methods
     local Window = {}
 
-    function Window:CreateTab(name)
+    function Window:CreateTab(name, icon)
         local Tab = {}
         
-        -- Create Tab Button with better styling
         local TabButton = createObject("TextButton", {
             Name = name .. "Tab",
-            Size = UDim2.new(1, 0, 0, 32),
-            BackgroundColor3 = Library.Theme.DarkContrast,
-            Text = "",
-            AutoButtonColor = false,
-            Parent = TabContainer,
-            LayoutOrder = #Tabs
-        })
-
-        -- Add corner to Tab Button
-        createObject("UICorner", {
-            CornerRadius = UDim.new(0, 6),
-            Parent = TabButton
-        })
-
-        -- Add tab icon (placeholder)
-        local TabIcon = createObject("Frame", {
-            Name = "Icon",
-            Size = UDim2.new(0, 20, 0, 20),
-            Position = UDim2.new(0, 8, 0.5, -10),
+            Size = UDim2.new(1, -20, 0, 40),
+            Position = UDim2.new(0, 10, 0, 0),
+            BackgroundColor3 = Library.Theme.Background,
             BackgroundTransparency = 1,
+            AutoButtonColor = false,
+            Parent = TabContainer
+        })
+
+        -- Add icon
+        local Icon = createObject("ImageLabel", {
+            Size = UDim2.new(0, 20, 0, 20),
+            Position = UDim2.new(0, 10, 0.5, -10),
+            BackgroundTransparency = 1,
+            Image = icon or "", -- Use provided icon or leave empty
+            ImageColor3 = Library.Theme.SubTextColor,
             Parent = TabButton
         })
 
-        -- Add tab text
-        local TabText = createObject("TextLabel", {
-            Name = "Title",
-            Size = UDim2.new(1, -40, 1, 0),
-            Position = UDim2.new(0, 35, 0, 0),
+        -- Add text label
+        local TextLabel = createObject("TextLabel", {
+            Size = UDim2.new(1, -50, 1, 0),
+            Position = UDim2.new(0, 40, 0, 0),
             BackgroundTransparency = 1,
             Text = name,
             TextColor3 = Library.Theme.TextColor,
@@ -224,7 +221,7 @@ function Library:CreateWindow(title)
             for _, tab in pairs(Tabs) do
                 tab.Page.Visible = false
                 createTween(tab.Button, {
-                    BackgroundColor3 = Library.Theme.DarkContrast
+                    BackgroundColor3 = Library.Theme.Background
                 })
                 createTween(tab.Button.Title, {
                     TextColor3 = Library.Theme.TextColor
